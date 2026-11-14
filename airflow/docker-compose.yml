@@ -1,0 +1,21 @@
+# ONE light container: `airflow standalone` (SQLite). ~2-3 GB RAM. Run from this folder:
+#   docker compose up --build   ->  http://localhost:8080  (admin password is printed in the logs)
+services:
+  airflow:
+    build: .
+    command: standalone
+    ports:
+      - "8080:8080"
+    mem_limit: 3g
+    env_file:
+      - ../.env
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+      PYTHONPATH: /opt/airflow/ingestion
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ../dbt:/opt/airflow/dbt
+      - ../ingestion:/opt/airflow/ingestion
+      - ../data:/opt/airflow/data
+      - ./airflow-data:/opt/airflow/airflow-data
