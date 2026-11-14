@@ -18,3 +18,10 @@ Entry format: `## YYYY-MM-DD HH:MM — H# title` then what / columns / needs fro
 - differences vs the CSV headers: names are uppercased (`Date`->`DATE`, `NOx`->`NOX`, `AQI_Bucket`->`AQI_BUCKET`); pollutants arrive already typed FLOAT, empties are NULL.
 - null % (so tests can set expectations): PM10 37.7, XYLENE 61.3, NH3 35.0, TOLUENE 27.2, BENZENE 19.0, AQI/AQI_BUCKET 15.9, PM2.5 15.6, O3 13.6, NOX 14.2, SO2 13.1, NO2 12.1, NO 12.1, CO 7.0, CITY 0, DATE 0.
 - needs from you: if `RAW_DEV` columns differ from these (e.g. mixed case), align your `load_dev_raw.py` to this exact shape, then run `dbt run/test --target prod` once and fix only the `renamed` CTE if needed.
+
+## 2026-11-14 22:00 — H7 full DAG green with real dbt (evidence)
+- what: pulled H5 (`7af6556`), reloaded Airflow, triggered `airsight_pipeline` end to end. Run `manual__2026-11-14T16:26:20+00:00` = **success**, all 6 tasks green: Airbyte sync (real job, 29,531 rows) -> validate_raw PASSED -> `transform.dbt_run` -> `transform.dbt_test` -> log_success. Total about 2.5 min.
+- dbt in Airflow (--target prod): `PASS=26 WARN=1 ERROR=0 TOTAL=27`; the single WARN is the intended `reported_aqi_range_warning` (93 preserved AQI readings), dbt exits 0.
+- prod tables verified in Snowflake as DBT_USER: STAGING.STG_CITY_DAY 29,531 rows; MARTS.MART_MONTHLY_CITY_SUMMARY 1,005; MART_POLLUTION_TRENDS 1,005; MART_CITY_RANKINGS 129 (overall + yearly scopes).
+- note: `dbt debug` in the container reports "git" as a failed check (git is not installed there); harmless since we use no dbt packages.
+- needs from you: H6 screenshots + final report text; nothing else blocks. Streamlit already points at MARTS, so your app can show prod data now.
