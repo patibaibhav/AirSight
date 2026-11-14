@@ -7,4 +7,4 @@ sources:
     tables:
       - name: city_day
         identifier: CITY_DAY
-        description: Raw source headers are preserved verbatim, including punctuation and case.
+        description: Airbyte uppercase source headers, including the quoted PM2.5 name; RAW_DEV uses matching uppercase headers.

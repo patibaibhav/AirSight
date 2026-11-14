@@ -22,9 +22,11 @@ required by dbt) loads local configuration; pyarrow supports pandas CSV uploads.
 
 Development will read RAW_DEV and write DEV_STAGING/DEV_MARTS. Production
 integration awaits B's RAW landed handoff. The loader creates only RAW_DEV.CITY_DAY,
-retains original headers, loads raw fields as strings, and preserves missing values.
+uses Airbyte's uppercase headers, loads raw fields as strings, and preserves missing values.
 On repeat runs it validates the existing table's summary and headers without adding
-rows or replacing data. Summary checks do not establish full row-by-row equality.
+rows or replacing data. An explicit `--replace` reloads only RAW_DEV.CITY_DAY;
+this was used to align its original mixed-case headers with the H4 Airbyte contract.
+Summary checks do not establish full row-by-row equality.
 
 Verified development load: 29,531 rows, 26 cities, 2015-01-01 through 2020-07-01.
 Source quality: 4,681 missing AQI values and 93 AQI readings above 1,000. No negative
@@ -58,6 +60,13 @@ Unhealthy shares use Poor/Very Poor/Severe buckets among usable AQI readings.
 Monthly shares are 0–1; ranking percentages are 0–100. Historical city/year coverage
 differs, so comparisons are descriptive and not controlled causal comparisons.
 
-Verified: all four models built; the complete 26-test suite passed. Independent
+Verified: all four models built in dev and prod; 26 blocking checks passed and
+the additional reported-AQI warning test surfaced the 93 retained out-of-range
+readings (27 tests total, zero errors). Independent
 pandas comparisons passed for all 1,005 monthly summaries, 26 overall city ranks,
 and 1,005 trend rows (monthly averages, rolling averages and YoY changes).
+
+Production H4 is available and validated. RAW and RAW_DEV now use uppercase
+headers; only the `renamed` CTE maps these headers into standardized columns.
+Airflow's transformation group runs the real dbt run followed by dbt test using
+the container's /opt/dbt-venv and --target prod. B owns full-DAG runtime validation.

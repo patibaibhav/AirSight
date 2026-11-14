@@ -26,8 +26,9 @@ pollutant values, and does not establish that the source readings are erroneous.
 dbt tests cover null city/date/keys, duplicate keys, accepted buckets/seasons,
 negative pollutant readings, PM2.5 > 1,500, cleaned AQI outside 0–1,000, future
 dates, preservation of flagged measurements, raw-to-staging city/date coverage,
-and reconciliation of monthly summaries to daily readings. All 26 tests passed
-against the development models on 2026-11-14.
+and reconciliation of monthly summaries to daily readings. All 26 blocking tests
+passed in development and production on 2026-11-14. A 27th, warning-only test
+reports the 93 original out-of-range AQI readings without blocking the pipeline.
 
 ## Analytical marts
 
@@ -50,6 +51,121 @@ counts), all 26 overall city averages and dense ranks, and all 1,005 monthly tre
 rows (AQI, three-month rolling mean and same-calendar-month YoY differences).
 Reproduce with `dbt/dev_tools/verify_dev_models.py` after the development build.
 
-Production verification, the Streamlit interface, charts and the five-question
-SQL-versus-app validation are pending. Development results are not evidence of
-completed Airbyte/Airflow integration.
+Production models were built successfully against Airbyte's RAW table. Development
+headers were aligned to uppercase to match H4; no source readings were changed.
+The real Airflow dbt run/test task group is implemented. Its Python syntax was
+checked locally; B must confirm the full running DAG in his Airflow container.
+
+## Conversational BI and visualizations
+
+Streamlit accepts natural-language questions and displays a concise response,
+generated SQL, bound city/year values, result table and chart. The six deterministic
+sample intents cover rankings, two-city annual comparisons, city trends, seasonal
+month patterns, a descriptive lockdown-period comparison and a 26-city heatmap.
+Charts include rankings, grouped city bars, time-series lines and a month heatmap.
+
+Gemini support reads its model and key from environment configuration. It receives
+schema context and the question, never warehouse credentials or result rows. One
+SQL-error correction is allowed before automatic fallback. Live Gemini validation
+is pending credentials; the reproducible demo uses the rule-based path. Ten offline
+tests cover query boundaries, injected SQL, CTE source checking, row limits,
+fallback, a single model retry, parameter binding, requested years and chart shapes.
+
+The parser permits one SELECT/WITH query on the configured marts, disallows
+DDL/DML, table functions and unrecognized functions, and caps results at 200 rows.
+Execution uses BI_USER/BI_ROLE with a 30-second statement timeout. This read-only
+role is an additional boundary beyond SQL validation.
+
+Live Streamlit AppTest verified the chat input, 12-row Delhi/Mumbai comparison,
+heatmap sample button, 26-city result table and both rendered chart elements.
+Native Chrome inspection also confirmed a live top-five-city question, table and
+bar chart against production MARTS. Screenshot files and full Airflow run evidence
+remain to be collected for the final report.
+
+## Five-question SQL/app validation — MARTS, 2026-11-14
+
+App queries ran as BI_USER/BI_ROLE; independent staging SQL ran as DBT_USER/TRANSFORM_ROLE. Gemini was disabled for reproducible fallback validation. All numeric values matched within 1e-8 tolerance.
+
+| Question | SQL result | App result | Match |
+|---|---|---|---|
+| Which are the 5 most polluted cities? | 5 rows; first: city=AHMEDABAD, avg_aqi=388.34407735697016, pollution_rank=1.0, days_measured=1241.0, pct_unhealthy_days=80.499597 | Same values and row order | Yes |
+| Compare Delhi and Mumbai AQI over the years | 12 rows; first: city=DELHI, year=2015.0, avg_aqi=297.02465753424656, days_measured=365.0 | Same values and row order | Yes |
+| Show the pollution trend for Delhi | 67 rows; first: city=DELHI, month_start=2015-01-01 00:00:00, avg_aqi=342.2903225806452, rolling_3_month_avg=342.2903225806452, days_measured=31.0 | Same values and row order | Yes |
+| Which month is worst in Delhi? | 12 rows; first: month=11.0, avg_aqi=401.9533333333333, days_measured=150.0 | Same values and row order | Yes |
+| How did lockdown 2020 change Delhi's AQI? | 2 rows; first: year=2019.0, avg_aqi=217.5108695652174, days_measured=92.0 | Same values and row order | Yes |
+
+Hand-written reference queries:
+
+Which are the 5 most polluted cities?
+
+```sql
+select city, avg(aqi) as avg_aqi, dense_rank() over(order by avg(aqi) desc nulls last) as pollution_rank, count(aqi) as days_measured, 100.0 * count_if(aqi is not null and aqi_bucket in ('Poor','Very Poor','Severe')) / nullif(count(aqi),0) as pct_unhealthy_days from AIRSIGHT.STAGING.STG_CITY_DAY group by city having count(aqi)>0 order by avg_aqi desc, city limit 5
+```
+
+Compare Delhi and Mumbai AQI over the years
+
+```sql
+select city, year, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.STAGING.STG_CITY_DAY where city in ('DELHI','MUMBAI') group by city, year order by year, city
+```
+
+Show the pollution trend for Delhi
+
+```sql
+with monthly as (select city, date_trunc('month',date)::date as month_start, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.STAGING.STG_CITY_DAY where city='DELHI' group by city,date_trunc('month',date)) select city, month_start, avg_aqi, avg(avg_aqi) over(order by month_start rows between 2 preceding and current row) as rolling_3_month_avg, days_measured from monthly order by month_start
+```
+
+Which month is worst in Delhi?
+
+```sql
+select month, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.STAGING.STG_CITY_DAY where city='DELHI' group by month having count(aqi)>0 order by avg_aqi desc, month
+```
+
+How did lockdown 2020 change Delhi's AQI?
+
+```sql
+select year, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.STAGING.STG_CITY_DAY where city='DELHI' and year in (2019,2020) and month between 3 and 5 group by year order by year
+```
+
+## Five-question SQL/app validation — DEV_MARTS, 2026-11-14
+
+App queries ran as BI_USER/BI_ROLE; independent staging SQL ran as DBT_USER/TRANSFORM_ROLE. Gemini was disabled for reproducible fallback validation. All numeric values matched within 1e-8 tolerance.
+
+| Question | SQL result | App result | Match |
+|---|---|---|---|
+| Which are the 5 most polluted cities? | 5 rows; first: city=AHMEDABAD, avg_aqi=388.34407735697016, pollution_rank=1.0, days_measured=1241.0, pct_unhealthy_days=80.499597 | Same values and row order | Yes |
+| Compare Delhi and Mumbai AQI over the years | 12 rows; first: city=DELHI, year=2015.0, avg_aqi=297.02465753424656, days_measured=365.0 | Same values and row order | Yes |
+| Show the pollution trend for Delhi | 67 rows; first: city=DELHI, month_start=2015-01-01 00:00:00, avg_aqi=342.2903225806452, rolling_3_month_avg=342.2903225806452, days_measured=31.0 | Same values and row order | Yes |
+| Which month is worst in Delhi? | 12 rows; first: month=11.0, avg_aqi=401.9533333333333, days_measured=150.0 | Same values and row order | Yes |
+| How did lockdown 2020 change Delhi's AQI? | 2 rows; first: year=2019.0, avg_aqi=217.5108695652174, days_measured=92.0 | Same values and row order | Yes |
+
+Hand-written reference queries:
+
+Which are the 5 most polluted cities?
+
+```sql
+select city, avg(aqi) as avg_aqi, dense_rank() over(order by avg(aqi) desc nulls last) as pollution_rank, count(aqi) as days_measured, 100.0 * count_if(aqi is not null and aqi_bucket in ('Poor','Very Poor','Severe')) / nullif(count(aqi),0) as pct_unhealthy_days from AIRSIGHT.DEV_STAGING.STG_CITY_DAY group by city having count(aqi)>0 order by avg_aqi desc, city limit 5
+```
+
+Compare Delhi and Mumbai AQI over the years
+
+```sql
+select city, year, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.DEV_STAGING.STG_CITY_DAY where city in ('DELHI','MUMBAI') group by city, year order by year, city
+```
+
+Show the pollution trend for Delhi
+
+```sql
+with monthly as (select city, date_trunc('month',date)::date as month_start, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.DEV_STAGING.STG_CITY_DAY where city='DELHI' group by city,date_trunc('month',date)) select city, month_start, avg_aqi, avg(avg_aqi) over(order by month_start rows between 2 preceding and current row) as rolling_3_month_avg, days_measured from monthly order by month_start
+```
+
+Which month is worst in Delhi?
+
+```sql
+select month, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.DEV_STAGING.STG_CITY_DAY where city='DELHI' group by month having count(aqi)>0 order by avg_aqi desc, month
+```
+
+How did lockdown 2020 change Delhi's AQI?
+
+```sql
+select year, avg(aqi) as avg_aqi, count(aqi) as days_measured from AIRSIGHT.DEV_STAGING.STG_CITY_DAY where city='DELHI' and year in (2019,2020) and month between 3 and 5 group by year order by year
+```

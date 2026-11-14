@@ -1,21 +1,26 @@
 with renamed as (
+    {% set original_headers = ['City', 'Date', 'PM2.5', 'PM10', 'NO', 'NO2', 'NOx', 'NH3', 'CO', 'SO2', 'O3', 'Benzene', 'Toluene', 'Xylene', 'AQI', 'AQI_Bucket'] %}
+    {% set raw = namespace(columns=[]) %}
+    {% for header in original_headers %}
+        {% do raw.columns.append(adapter.quote(header | upper)) %}
+    {% endfor %}
     select
-        upper(trim(to_varchar("City"))) as city,
-        try_to_date(to_varchar("Date")) as date,
-        try_to_double(to_varchar("PM2.5")) as pm25,
-        try_to_double(to_varchar("PM10")) as pm10,
-        try_to_double(to_varchar("NO")) as no,
-        try_to_double(to_varchar("NO2")) as no2,
-        try_to_double(to_varchar("NOx")) as nox,
-        try_to_double(to_varchar("NH3")) as nh3,
-        try_to_double(to_varchar("CO")) as co,
-        try_to_double(to_varchar("SO2")) as so2,
-        try_to_double(to_varchar("O3")) as o3,
-        try_to_double(to_varchar("Benzene")) as benzene,
-        try_to_double(to_varchar("Toluene")) as toluene,
-        try_to_double(to_varchar("Xylene")) as xylene,
-        try_to_double(to_varchar("AQI")) as aqi_reported,
-        nullif(initcap(trim(to_varchar("AQI_Bucket"))), '') as aqi_bucket_reported
+        upper(trim(to_varchar({{ raw.columns[0] }}))) as city,
+        try_to_date(to_varchar({{ raw.columns[1] }})) as date,
+        try_to_double(to_varchar({{ raw.columns[2] }})) as pm25,
+        try_to_double(to_varchar({{ raw.columns[3] }})) as pm10,
+        try_to_double(to_varchar({{ raw.columns[4] }})) as no,
+        try_to_double(to_varchar({{ raw.columns[5] }})) as no2,
+        try_to_double(to_varchar({{ raw.columns[6] }})) as nox,
+        try_to_double(to_varchar({{ raw.columns[7] }})) as nh3,
+        try_to_double(to_varchar({{ raw.columns[8] }})) as co,
+        try_to_double(to_varchar({{ raw.columns[9] }})) as so2,
+        try_to_double(to_varchar({{ raw.columns[10] }})) as o3,
+        try_to_double(to_varchar({{ raw.columns[11] }})) as benzene,
+        try_to_double(to_varchar({{ raw.columns[12] }})) as toluene,
+        try_to_double(to_varchar({{ raw.columns[13] }})) as xylene,
+        try_to_double(to_varchar({{ raw.columns[14] }})) as aqi_reported,
+        nullif(initcap(trim(to_varchar({{ raw.columns[15] }}))), '') as aqi_bucket_reported
     from {{ source('air_quality', 'city_day') }}
 ), cleaned as (
     select

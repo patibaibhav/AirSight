@@ -1,6 +1,6 @@
 with raw_keys as (
-    select distinct upper(trim(to_varchar("City"))) as city,
-        try_to_date(to_varchar("Date")) as date
+    select distinct upper(trim(to_varchar("CITY"))) as city,
+        try_to_date(to_varchar("DATE")) as date
     from {{ source('air_quality', 'city_day') }}
 )
 select r.city, r.date
