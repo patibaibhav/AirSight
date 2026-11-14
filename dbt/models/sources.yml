@@ -1,0 +1,10 @@
+version: 2
+sources:
+  - name: air_quality
+    database: "{{ env_var('SNOWFLAKE_DATABASE', 'AIRSIGHT') }}"
+    schema: "{{ 'RAW' if target.name == 'prod' else 'RAW_DEV' }}"
+    description: Original daily Indian city air-quality readings from the source CSV.
+    tables:
+      - name: city_day
+        identifier: CITY_DAY
+        description: Raw source headers are preserved verbatim, including punctuation and case.

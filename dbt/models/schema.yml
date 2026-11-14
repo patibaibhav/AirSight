@@ -1,0 +1,80 @@
+version: 2
+models:
+  - name: stg_city_day
+    description: One row per uppercase city and date. Original AQI is retained; out-of-range AQI is flagged and excluded from cleaned AQI and its bucket, per Rahul's approved policy. Missing pollutant readings are not imputed.
+    columns:
+      - name: city_date_key
+        description: Unique city and ISO-date key.
+        data_tests: [not_null, unique]
+      - name: city
+        description: Trimmed uppercase source city.
+        data_tests: [not_null]
+      - name: date
+        description: Observation date parsed defensively.
+        data_tests: [not_null]
+      - name: aqi_reported
+        description: Numeric original AQI, including out-of-range readings.
+      - name: aqi_out_of_range
+        description: True when the reported numeric AQI is outside 0 through 1000 inclusive.
+        data_tests: [not_null]
+      - name: aqi
+        description: AQI used by analytics; null for missing or out-of-range readings.
+      - name: aqi_bucket_reported
+        description: Normalized original bucket, retained for traceability.
+      - name: aqi_bucket
+        description: Reported bucket for usable AQI readings; null otherwise.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Good', 'Satisfactory', 'Moderate', 'Poor', 'Very Poor', 'Severe']
+  - name: mart_monthly_city_summary
+    description: One row per city and observed calendar month. Pollutant averages ignore missing readings. Unhealthy share is Poor/Very Poor/Severe days divided by usable AQI days, on a 0–1 scale.
+    columns:
+      - name: city_month_key
+        description: Unique city and month key.
+        data_tests: [not_null, unique]
+      - name: city
+        data_tests: [not_null]
+      - name: month_start
+        data_tests: [not_null]
+      - name: days_measured
+        description: Count of usable AQI readings, excluding missing/out-of-range values.
+        data_tests: [not_null]
+      - name: excluded_aqi_days
+        description: Number of out-of-range AQI readings in this month.
+      - name: missing_aqi_days
+        description: Number of missing reported AQI readings in this month.
+  - name: mart_pollution_trends
+    description: One row per city and calendar month between its first and last observations. The three-month rolling average gives equal weight to non-null monthly averages in the current and prior two calendar months. Missing months remain null. YoY compares the same calendar month one year earlier.
+    columns:
+      - name: city_month_key
+        data_tests: [not_null, unique]
+      - name: city
+        data_tests: [not_null]
+      - name: month_start
+        data_tests: [not_null]
+      - name: rolling_months_measured
+        description: Number of non-null monthly averages contributing to the rolling window, from zero to three.
+      - name: season
+        description: Simplified national seasonal grouping; local climates vary.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Winter', 'Pre-monsoon', 'Monsoon', 'Post-monsoon']
+  - name: mart_city_rankings
+    description: City rankings at overall and yearly grains; always filter period_scope before comparing cities. Rank 1 has the highest usable daily mean AQI. Ties share ranks. Best/worst months use monthly average AQI, with earliest date resolving ties. Missing coverage limits comparability.
+    columns:
+      - name: ranking_key
+        data_tests: [not_null, unique]
+      - name: city
+        data_tests: [not_null]
+      - name: period_scope
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['overall', 'yearly']
+      - name: year
+        description: Null for overall rows, observation year for yearly rows.
+      - name: pct_unhealthy_days
+        description: Percentage of usable AQI days categorized Poor/Very Poor/Severe, from zero to 100.

@@ -1,0 +1,19 @@
+airsight:
+  target: dev
+  outputs:
+    dev: &connection
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('DBT_USER', 'DBT_USER') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      role: TRANSFORM_ROLE
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'AIRSIGHT_WH') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'AIRSIGHT') }}"
+      schema: DEV_STAGING
+      threads: 2
+      client_session_keep_alive: false
+      connect_timeout: 20
+      query_tag: airsight_dbt
+    prod:
+      <<: *connection
+      schema: STAGING
