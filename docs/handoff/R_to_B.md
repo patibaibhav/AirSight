@@ -29,3 +29,9 @@ Entry format: `## YYYY-MM-DD HH:MM — H# title` then what / needs from you.
 - validation: five sample answers matched hand-written staging SQL in both DEV_MARTS and MARTS, including row order and numeric tolerance. Full queries and results are recorded in docs/report/R_sections.md.
 - run: pip install -r app/requirements.txt then streamlit run app/streamlit_app.py (from repo root); on Rahul's Mac: dbt/.venv/bin/python -m streamlit run app/streamlit_app.py. Local URL http://127.0.0.1:8501 is not remotely accessible to B.
 - limitation: Gemini key/model are not configured or live-tested; deterministic natural-language fallback is demo-ready. H6 screenshot files are still pending; native browser verification succeeded but report screenshots have not been committed.
+
+## 2026-11-15 — Dashboard UI and guided explorer improvements
+- what: redesigned Streamlit layout, five city/year-filtered explorer views, result summaries, recent-question snapshots, CSV/SQL downloads and polished charts. Ranking size/order are configurable. Queries retain BI_ROLE, guardrail and row cap; no warehouse models or dependencies changed.
+- efficiency: session-only result cache (five minutes, twenty entries), explicit explorer refresh, and no startup/background/filter-change queries. Filtered AQI aggregates are daily-weighted, and submitted scope/fetch time remain visible.
+- verified: 17 offline tests, live chat/heatmap/export/explorer UI check, and all five year-filtered explorer analyses matching independent CSV calculations. H7 was pulled and confirmed from B's handoff; full Airflow integration is green.
+- report: screenshots remain Rahul's manual task, per his request. Expand Result table and View generated SQL for report captures. Run command and local URL remain unchanged; Gemini remains optional and awaits live-key setup.

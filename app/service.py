@@ -76,7 +76,7 @@ def summarize(result: Answer) -> str:
     if result.intent == 'monthly':
         row = data.iloc[0]
         import calendar
-        return f"{calendar.month_name[int(row['month'])]} is first in this ordering, with a daily-weighted mean AQI of {float(row['avg_aqi']):.1f} across the available years."
+        return f"{calendar.month_name[int(row['month'])]} is first in this ordering, with a daily-weighted mean AQI of {float(row['avg_aqi']):.1f} across the selected observations."
     if result.intent == 'lockdown':
         return 'March–May 2019 and March–May 2020 are compared below. This descriptive comparison does not establish a causal lockdown effect.'
     return f'Returned {len(data):,} rows from the historical air-quality marts. The table and chart show the measured values.'

@@ -1,5 +1,26 @@
 # Rahul — Warehouse, transformation and analytics
 
+## 2026-11-15 interface update
+
+The final interface adds a guided explorer alongside conversational questions.
+Five analyses support explicit city/year selection: city trends, annual city
+comparisons, rankings, seasonal patterns and a city/month heatmap. Ranking size
+and ordering are configurable. All explorer values are calculated from existing
+read-only marts; the warehouse model contracts remain unchanged.
+
+Result cards display the submitted scope, fetch time, observed range summaries,
+chart, expandable table/SQL and downloadable CSV/query. Recent questions retain
+up to ten snapshots. A five-minute, twenty-entry session cache avoids repeating
+identical requests, and the user can explicitly refresh explorer data. No warehouse
+query runs at startup or merely because a filter is changed.
+
+Validation: 17 offline tests passed for query boundaries, filtered scopes, cache
+reuse/expiry/refresh, history/navigation and exports. The live Streamlit smoke
+check exercised city comparison, heatmap, downloads and filtered rankings. All
+five explorer analyses for a selected 2019 interval matched independent pandas
+calculations on the original CSV, within numeric tolerance 1e-8. Report screenshots
+remain manual; these results do not imply that screenshot files are complete.
+
 ## Database design
 
 The implementation follows the repository's Snowflake warehouse architecture.
