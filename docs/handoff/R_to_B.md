@@ -39,3 +39,8 @@ Entry format: `## YYYY-MM-DD HH:MM — H# title` then what / needs from you.
 ## 2026-11-16 — Header visibility fix
 - what: added main-content clearance below Streamlit's fixed toolbar on desktop/mobile and increased the AIR QUALITY INTELLIGENCE label's size and line height.
 - verified: native Chrome visual inspection confirms the entire label is visible below the toolbar. Styling-only change; data queries are unchanged.
+
+## 2026-11-16 — Chat scope bugs fixed
+- what: ranking questions now honor requested years with daily-weighted AQI, heatmaps honor requested cities/years, and inclusive year ranges include intervening years. Explicit separate years remain separate. Rule version now invalidates earlier cached query results.
+- verified: 20 automated tests passed; three corrected chat answers match the validated production explorer (2020 top five: 5 rows; Delhi 2020 heatmap: 1 row; Delhi/Mumbai 2018–2020 comparison: 6 rows).
+- Docker: installed locally but engine not running; no Docker/Airflow changes made. R's Python app/dbt do not require Docker.

@@ -9,6 +9,7 @@ import streamlit as st
 from charts import make_chart
 from explorer import VIEWS, build_explorer_query, explorer_title
 from schema_context import CITIES, SAMPLES, namespace
+from rules import RULES_VERSION
 from service import Answer, answer, execute, summarize
 from ui import STYLE, csv_export, result_metrics
 
@@ -38,7 +39,7 @@ def reset_explorer_cities() -> None:
 
 
 def cache_key(kind: str, payload: tuple) -> tuple:
-    return (kind, namespace(), os.getenv('GEMINI_MODEL', ''), *payload)
+    return (RULES_VERSION, kind, namespace(), os.getenv('GEMINI_MODEL', ''), *payload)
 
 
 def run_cached(key: tuple, operation, refresh: bool = False):

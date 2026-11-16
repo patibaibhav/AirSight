@@ -8,7 +8,7 @@ import snowflake.connector
 
 from charts import make_chart
 from nl2sql import guard_sql
-from rules import build_query
+from rules import build_query, years_in
 from schema_context import SAMPLES
 from service import answer
 
@@ -76,6 +76,28 @@ class GuardTests(unittest.TestCase):
             query = build_query(question)
             self.assertEqual(query.params[-1], 2020)
             self.assertIn('?', guard_sql(query.sql))
+
+    def test_ranking_uses_requested_year_and_weighted_observations(self):
+        query = build_query('Which are the 5 most polluted cities in 2020?')
+        self.assertEqual(query.params, (2020,))
+        self.assertNotIn("period_scope = 'overall'", query.sql)
+        self.assertIn('sum(avg_aqi * days_measured)', query.sql)
+        self.assertTrue(guard_sql(query.sql).endswith('LIMIT 5'))
+
+    def test_heatmap_binds_city_and_year(self):
+        query = build_query('Show a heatmap for Delhi in 2020')
+        self.assertEqual(query.params, ('DELHI', 2020))
+        self.assertEqual(guard_sql(query.sql).count('?'), 2)
+
+    def test_year_ranges_expand_but_discrete_years_remain_discrete(self):
+        for phrase in ['from 2018 to 2020', 'between 2018 and 2020', '2018–2020', '2018 through 2020']:
+            with self.subTest(phrase=phrase):
+                query = build_query('Compare Delhi and Mumbai ' + phrase)
+                self.assertEqual(query.params, ('DELHI', 'MUMBAI', 2018, 2019, 2020))
+        self.assertEqual(years_in('2018 and 2020'), (2018, 2020))
+        for phrase in ['2015 to 2024', '2020 to 2018']:
+            with self.assertRaises(ValueError):
+                years_in(phrase)
 
     def test_unsupported_metrics_and_cities_are_not_silently_reinterpreted(self):
         for question in ['Compare Delhi and Paris', 'PM2.5 trend in Delhi']:
