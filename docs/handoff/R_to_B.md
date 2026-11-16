@@ -35,3 +35,7 @@ Entry format: `## YYYY-MM-DD HH:MM — H# title` then what / needs from you.
 - efficiency: session-only result cache (five minutes, twenty entries), explicit explorer refresh, and no startup/background/filter-change queries. Filtered AQI aggregates are daily-weighted, and submitted scope/fetch time remain visible.
 - verified: 17 offline tests, live chat/heatmap/export/explorer UI check, and all five year-filtered explorer analyses matching independent CSV calculations. H7 was pulled and confirmed from B's handoff; full Airflow integration is green.
 - report: screenshots remain Rahul's manual task, per his request. Expand Result table and View generated SQL for report captures. Run command and local URL remain unchanged; Gemini remains optional and awaits live-key setup.
+
+## 2026-11-16 — Header visibility fix
+- what: added main-content clearance below Streamlit's fixed toolbar on desktop/mobile and increased the AIR QUALITY INTELLIGENCE label's size and line height.
+- verified: native Chrome visual inspection confirms the entire label is visible below the toolbar. Styling-only change; data queries are unchanged.

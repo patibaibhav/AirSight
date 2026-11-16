@@ -7,6 +7,8 @@ STYLE = '''
 :root { --air-teal: #087e8b; --air-ink: #163b42; }
 .stApp { background: #f5f8fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 .block-container { padding-top: 2rem; padding-bottom: 3rem; max-width: 1320px; }
+/* Streamlit's fixed toolbar occupies the top of the main viewport. */
+[data-testid="stMainBlockContainer"] { padding-top: 4.75rem; }
 h1, h2, h3 { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important; letter-spacing: -.035em; color: #163b42; }
 h1 { font-size: clamp(2rem, 4vw, 3.2rem) !important; line-height: 1.15 !important; }
 [data-testid="stSidebar"] { background: #edf3f5; border-right: 1px solid #dce7eb; }
@@ -21,13 +23,13 @@ h1 { font-size: clamp(2rem, 4vw, 3.2rem) !important; line-height: 1.15 !importan
 [data-testid="stExpander"] { background: #fff; border-radius: 12px; }
 .air-brand { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 1.65rem; font-weight: 800; color: #163b42; letter-spacing: -.07em; }
 .air-brand span { color: #087e8b; }
-.air-eyebrow { color: #087e8b; letter-spacing: .17em; font-size: .72rem; font-weight: 800; margin-bottom: .55rem; }
+.air-eyebrow { color: #087e8b; letter-spacing: .14em; font-size: .8rem; line-height: 1.5; font-weight: 800; margin-bottom: .55rem; }
 .air-lede { color: #58717c; font-size: 1.04rem; max-width: 680px; line-height: 1.65; margin-bottom: 1.25rem; }
 .air-pill { display: inline-block; border: 1px solid #bedad9; background: #e9f6f2; color: #17615a; border-radius: 100px; padding: .25rem .65rem; font-size: .76rem; font-weight: 600; }
 .air-empty { background: linear-gradient(125deg,#e8f4f3,#f1f6fd); border: 1px solid #dce9ec; padding: 1.4rem 1.6rem; border-radius: 18px; margin: 1rem 0; }
 .air-empty h3 { margin: 0 0 .3rem; font-size: 1.2rem; }
 .air-empty p { color: #58717c; margin: 0; line-height: 1.6; }
-@media(max-width: 700px) { .block-container { padding: 1rem 1rem 3rem; } [data-testid="stMetric"] { padding: .7rem; } }
+@media(max-width: 700px) { .block-container { padding: 1rem 1rem 3rem; } [data-testid="stMainBlockContainer"] { padding-top: 4.5rem; } [data-testid="stMetric"] { padding: .7rem; } }
 @media(prefers-color-scheme: dark) { .stApp { color-scheme: light; } }
 </style>
 '''
